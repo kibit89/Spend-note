@@ -583,77 +583,101 @@
   }
 
   /* #setup= payload: seeds categories and fixed-cost items without touching records. */
+  function setupCatList(raw) {
+    var out = [];
+    (Array.isArray(raw) ? raw : []).forEach(function (item) {
+      var name = '', emoji = '';
+      if (typeof item === 'string') name = item;
+      else if (Array.isArray(item)) { name = item[0]; emoji = item[1]; }
+      else if (item && typeof item === 'object') { name = item.name; emoji = item.emoji; }
+      name = cleanName(name, '', 20);
+      if (!name) return;
+      out.push({ name: name, emoji: String(emoji || '').slice(0, 8) || '🏷️' });
+    });
+    return out;
+  }
+
+  function setupAmountList(raw, maxLen) {
+    var out = [];
+    (Array.isArray(raw) ? raw : []).forEach(function (item) {
+      var name = '', amount = 0;
+      if (typeof item === 'string') name = item;
+      else if (Array.isArray(item)) { name = item[0]; amount = item[1]; }
+      else if (item && typeof item === 'object') { name = item.name; amount = item.amount; }
+      name = cleanName(name, '', maxLen || 24);
+      if (!name) return;
+      out.push({ name: name, amount: cleanGoal(amount) });
+    });
+    return out;
+  }
+
+  /* Stable id for a name, so applying the same link twice never duplicates. */
+  var SPECIAL_CATEGORY_IDS = { '고정비': 'fixed', '기타': 'etc', '기타 수입': 'inc_etc' };
+  function setupCategoryId(name, prefix) {
+    if (SPECIAL_CATEGORY_IDS[name]) return SPECIAL_CATEGORY_IDS[name];
+    var h = 0;
+    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+    return prefix + '_' + Math.abs(h).toString(36);
+  }
+
   function applySetup(state, payload) {
     var result = { categories: 0, incomeCategories: 0, fixedCosts: 0, cards: 0, replacedCategories: false };
     if (!payload || typeof payload !== 'object') return result;
 
-    function readList(list) {
-      var out = [], seen = {};
-      (Array.isArray(list) ? list : []).forEach(function (raw) {
-        if (!raw || typeof raw !== 'object') return;
-        var name = cleanName(raw.name, '', 20);
-        if (!name) return;
-        var id = typeof raw.id === 'string' && raw.id ? raw.id.slice(0, 40) : createId('cat');
-        if (seen[id]) return;
-        seen[id] = true;
-        out.push({ id: id, name: name, emoji: String(raw.emoji || '').slice(0, 8) || '🏷️' });
-      });
-      return { list: out, seen: seen };
-    }
-
-    var cats = readList(payload.categories);
-    if (cats.list.length) {
-      if (!cats.seen[ETC_CATEGORY_ID]) {
-        cats.list.push({ id: ETC_CATEGORY_ID, name: '기타', emoji: '📌' });
-        cats.seen[ETC_CATEGORY_ID] = true;
+    function fillCategoryList(list, incoming, prefix, etcId, etcName) {
+      if (!incoming.length) return 0;
+      var addEtc = false;
+      function ensureEtc() {
+        if (list.some(function (c) { return c.id === etcId; })) return;
+        list.push({ id: etcId, name: etcName, emoji: '📌' });
+        addEtc = !incoming.some(function (c) { return c.name === etcName; });
       }
       if (!state.entries.length) {
         // A fresh install has nothing to preserve, so the setup list becomes the whole set.
-        state.categories = cats.list;
-        result.replacedCategories = true;
-        result.categories = cats.list.length;
-      } else {
-        cats.list.forEach(function (c) {
-          var existing = null;
-          for (var i = 0; i < state.categories.length; i++) if (state.categories[i].id === c.id) { existing = state.categories[i]; break; }
-          if (existing) { existing.name = c.name; existing.emoji = c.emoji; }
-          else state.categories.push(c);
-          result.categories++;
+        list.length = 0;
+        incoming.forEach(function (c) {
+          list.push({ id: setupCategoryId(c.name, prefix), name: c.name, emoji: c.emoji });
         });
+        ensureEtc();
+        return incoming.length + (addEtc ? 1 : 0);
       }
+      incoming.forEach(function (c) {
+        var existing = null;
+        var wantedId = setupCategoryId(c.name, prefix);
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].name === c.name || list[i].id === wantedId) { existing = list[i]; break; }
+        }
+        if (existing) { existing.name = c.name; existing.emoji = c.emoji; }
+        else list.push({ id: wantedId, name: c.name, emoji: c.emoji });
+      });
+      ensureEtc();
+      return incoming.length + (addEtc ? 1 : 0);
     }
 
-    var incCats = readList(payload.incomeCategories);
-    if (incCats.list.length && !state.entries.length) {
-      if (!incCats.seen[ETC_INCOME_CATEGORY_ID]) {
-        incCats.list.push({ id: ETC_INCOME_CATEGORY_ID, name: '기타 수입', emoji: '📌' });
-      }
-      state.incomeCategories = incCats.list;
-      result.incomeCategories = incCats.list.length;
-    }
+    var cats = setupCatList(payload.c || payload.categories);
+    result.categories = fillCategoryList(state.categories, cats, 'cat', ETC_CATEGORY_ID, '기타');
+    result.replacedCategories = !state.entries.length && cats.length > 0;
 
-    (Array.isArray(payload.fixedCosts) ? payload.fixedCosts : []).forEach(function (raw) {
-      var name = cleanName(raw && raw.name, '', 24);
-      if (!name) return;
-      var amount = cleanGoal(raw && raw.amount);
+    var inc = setupCatList(payload.ic || payload.incomeCategories);
+    result.incomeCategories = fillCategoryList(state.incomeCategories, inc, 'icat', ETC_INCOME_CATEGORY_ID, '기타 수입');
+
+    setupAmountList(payload.f || payload.fixedCosts, 24).forEach(function (item) {
       var existing = null;
       for (var i = 0; i < state.fixedCosts.length; i++) {
-        if (state.fixedCosts[i].name === name) { existing = state.fixedCosts[i]; break; }
+        if (state.fixedCosts[i].name === item.name) { existing = state.fixedCosts[i]; break; }
       }
       if (existing) {
-        if (amount > 0) existing.amount = amount;
+        if (item.amount > 0) existing.amount = item.amount;
       } else {
-        state.fixedCosts.push({ id: createId('fx'), name: name, amount: amount });
+        state.fixedCosts.push({ id: createId('fx'), name: item.name, amount: item.amount });
       }
       result.fixedCosts++;
     });
 
-    (Array.isArray(payload.cards) ? payload.cards : []).forEach(function (raw) {
-      var name = cleanName(raw && raw.name, '', 20);
-      if (!name) return;
-      var exists = state.cards.some(function (c) { return c.name === name; });
+    setupAmountList(payload.cards, 20).forEach(function (item) {
+      var exists = state.cards.some(function (c) { return c.name === item.name; });
       if (!exists) {
-        state.cards.push({ id: createId('card'), name: name, goal: cleanGoal(raw && raw.goal) });
+        state.cards.push({ id: createId('card'), name: item.name, goal: item.amount });
         result.cards++;
       }
     });

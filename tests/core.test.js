@@ -264,6 +264,26 @@
     eq(used.categories.length, 9, 'setup merges when entries exist');
     eq(used.entries.length, 6, 'setup does not touch entries');
 
+    // compact form, as used by a shareable #setup= link
+    var compact = {
+      c: [['반찬가게', '🥘'], ['다이소', '🧴'], ['고정비', '📅'], ['기타', '📌']],
+      f: ['관리비', '가스비'],
+      cards: [['신한카드', 500000]]
+    };
+    var cs = C.defaultState();
+    var cr = C.applySetup(cs, compact);
+    eq(cs.categories.map(function (c) { return c.name; }), ['반찬가게', '다이소', '고정비', '기타'], 'compact setup replaces categories');
+    eq(cs.categories[2].id, 'fixed', 'compact setup maps 고정비 id');
+    eq(cs.categories[3].id, 'etc', 'compact setup maps 기타 id');
+    eq(cr.fixedCosts, 2, 'compact setup fixed count');
+    eq(cs.fixedCosts[0].amount, 0, 'compact setup fixed amount zero');
+    eq(cs.cards.length, 2, 'compact setup keeps default card and adds one');
+    eq(cs.cards[1].goal, 500000, 'compact setup card goal');
+    C.applySetup(cs, compact);
+    eq(cs.categories.length, 4, 'compact setup idempotent');
+    eq(cs.fixedCosts.length, 2, 'compact setup fixed idempotent');
+    eq(cs.cards.length, 2, 'compact setup card idempotent');
+
     return { count: count, failures: failures };
   }
 

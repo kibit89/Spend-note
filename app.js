@@ -4,7 +4,7 @@
 
   var C = window.SpendCore;
   var STORE_KEY = 'spend-note:v2';
-  var VERSION_LABEL = 'v2';
+  var VERSION_LABEL = 'v3';
 
   /* ---------- helpers ---------- */
 
