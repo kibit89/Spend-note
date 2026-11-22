@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spend Note — core tests</title>
+<style>
+  body { font: 14px/1.55 -apple-system, "Noto Sans KR", sans-serif; margin: 20px; background: #f4f6f5; color: #132019; }
+  h1 { font-size: 17px; }
+  #summary { font-weight: 700; padding: 10px 12px; border-radius: 10px; background: #e2f2ee; display: inline-block; }
+  #summary.bad { background: #fbe9e9; color: #b02a2a; }
+  ul { padding-left: 18px; }
+  li { color: #b02a2a; }
+</style>
+</head>
+<body>
+<h1>Spend Note core tests</h1>
+<div id="summary">running…</div>
+<ul id="failures"></ul>
+<script src="../core.js"></script>
+<script src="core.test.js"></script>
+<script>
+  var report = window.runSpendNoteTests();
+  document.getElementById('summary').textContent = report.count + ' assertions · ' + report.failures.length + ' failures';
+  if (report.failures.length) {
+    document.getElementById('summary').className = 'bad';
+    document.getElementById('failures').innerHTML = report.failures.map(function (f) {
+      var li = document.createElement('li'); li.textContent = f; return li.outerHTML;
+    }).join('');
+  }
+  document.title = (report.failures.length ? 'FAIL ' : 'PASS ') + report.count;
+</script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Spend Note — a private, offline spending notebook. Everything stays on your device.">
+<title>Spend Note</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111614" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Spend Note">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+<div class="app">
+
+  <header class="appbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30">
+          <rect width="32" height="32" rx="9" fill="currentColor"/>
+          <path d="M8.5 10.6h15a2 2 0 0 1 2 2v8.6a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-8.6a2 2 0 0 1 2-2z" fill="#fff" opacity=".96"/>
+          <path d="M8.5 10.6V9.2a2 2 0 0 1 2-2h10" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+          <circle cx="21.6" cy="16.9" r="1.5" fill="currentColor"/>
+        </svg>
+      </span>
+      <h1>Spend Note</h1>
+    </div>
+    <div class="appbar-right">
+      <span class="appbar-date" id="todayLabel"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 입력 -->
+    <section id="view-add" class="view is-active">
+      <div class="card hero" id="hero"></div>
+
+      <div class="card entry-card">
+        <div class="type-toggle" role="group" aria-label="지출 또는 수입">
+          <button class="type-btn is-on" data-act="pick-type" data-type="expense">지출</button>
+          <button class="type-btn" data-act="pick-type" data-type="income">수입</button>
+        </div>
+
+        <div class="amount-row">
+          <input id="amountInput" class="amount-input" type="text" inputmode="numeric"
+                 autocomplete="off" enterkeyhint="done" placeholder="0" aria-label="금액">
+          <span class="won-unit" id="amountUnit">원</span>
+          <button class="clear-btn" id="clearAmount" data-act="clear-amount" aria-label="금액 지우기" hidden>✕</button>
+        </div>
+
+        <div class="chips" id="quickChips"></div>
+        <div class="cat-grid" id="catGrid"></div>
+
+        <div id="methodWrap">
+          <div class="method-scroll" id="methodChips"></div>
+        </div>
+
+        <input id="memoInput" class="memo-input" type="text" placeholder="메모 (선택)" maxlength="60"
+               autocomplete="off" aria-label="메모">
+
+        <label class="check-row" id="excludeRow">
+          <input type="checkbox" id="excludeCheck">
+          <span>카드 실적에서 빼기 <em>세금·상품권·해외결제 등</em></span>
+        </label>
+
+        <button class="btn primary wide save-btn" id="saveMain" data-act="save-main">저장</button>
+      </div>
+
+      <div class="card gauges" id="gaugeCard" hidden></div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title" id="todayTitle">오늘</h2>
+          <span class="card-total" id="todayTotal"></span>
+        </div>
+        <ul class="entry-list" id="todayList"></ul>
+      </div>
+    </section>
+
+    <!-- 달력 -->
+    <section id="view-calendar" class="view">
+      <div class="card cal">
+        <div class="cal-head">
+          <button class="icon-btn" data-act="cal-prev" aria-label="이전 달">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <strong id="calTitle"></strong>
+          <button class="icon-btn" data-act="cal-next" aria-label="다음 달">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="cal-weekdays" id="calWeekdays"></div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span id="calMonthTotal"></span>
+          <button class="btn tiny ghost" data-act="cal-today" id="calTodayBtn" hidden>이번 달로</button>
+        </div>
+      </div>
+      <div id="dayPanel"></div>
+    </section>
+
+    <!-- 요약 -->
+    <section id="view-summary" class="view">
+      <div class="month-nav">
+        <button class="icon-btn" data-act="sum-prev" aria-label="이전 달">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <strong id="sumTitle"></strong>
+        <button class="icon-btn" data-act="sum-next" aria-label="다음 달">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="card" id="sumTotals"></div>
+      <div class="card flow-card" id="sumFlow"></div>
+      <div class="card" id="sumCats"></div>
+      <div class="card" id="sumIncome"></div>
+      <div class="card" id="sumCards"></div>
+      <div class="card" id="sumMethods"></div>
+    </section>
+
+    <!-- 설정 -->
+    <section id="view-settings" class="view">
+      <div class="card">
+        <h2 class="card-title">고정비</h2>
+        <p class="hint">매달 나가는 금액을 적어 두면 ‘고정비 빼고 여유 돈’과 ‘주간 필요 수입’을 계산해요.</p>
+        <div id="fixedList"></div>
+        <div class="sum-line" id="fixedTotal"></div>
+        <button class="btn wide" data-act="add-fixed">+ 고정비 항목 추가</button>
+        <p class="fine">같은 금액을 지출 내역에도 적으면 여유 돈에서 두 번 빠져요. 고정비는 여기서만 관리하세요.</p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">카드</h2>
+        <p class="hint">카드별 목표 실적을 정하면 이번 달 진행률과 필요한 수입을 계산해요. 풍차돌리기 카드도 여기서 추가하세요.</p>
+        <div id="cardList"></div>
+        <div class="sum-line" id="cardTotal"></div>
+        <button class="btn wide" data-act="add-card">+ 카드 추가</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">지출 카테고리</h2>
+        <div id="catList"></div>
+        <button class="btn wide" data-act="add-cat">+ 카테고리 추가</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">수입 카테고리</h2>
+        <div id="incomeCatList"></div>
+        <button class="btn wide" data-act="add-income-cat">+ 수입 카테고리 추가</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">백업 · 복원</h2>
+        <p class="hint">기록은 이 폰에만 있어요. 폰을 바꾸거나 브라우저 데이터를 지우기 전에 백업해 두세요.</p>
+        <button class="btn wide" data-act="export">JSON으로 내보내기</button>
+        <label class="btn wide file-btn">JSON에서 복원하기
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </label>
+        <button class="btn wide danger" data-act="reset">모든 기록 지우기</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">홈 화면에 추가</h2>
+        <p class="hint">크롬에서 주소창 오른쪽 ⋮ → ‘홈 화면에 추가’를 누르면 주소창 없는 앱처럼 열려요.</p>
+        <button class="btn wide" id="installBtn" data-act="install" hidden>앱으로 설치</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">이 앱에 대해</h2>
+        <p class="hint">기록은 서버로 보내지 않고 이 기기의 브라우저 저장소(localStorage)에만 저장해요. 다른 사람이 같은 주소를 열어도 빈 앱만 보여요. 다만 브라우저 데이터를 지우거나 앱을 삭제하면 기록도 함께 사라져요.</p>
+        <p class="fine" id="verLine"></p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="화면 이동">
+    <button class="tab is-active" data-act="tab" data-view="add">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
+      <span>입력</span>
+    </button>
+    <button class="tab" data-act="tab" data-view="calendar">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>달력</span>
+    </button>
+    <button class="tab" data-act="tab" data-view="summary">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-6M21 19H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>요약</span>
+    </button>
+    <button class="tab" data-act="tab" data-view="settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.6v2.2M12 18.2v2.2M4.9 7.9l1.9 1.1M17.2 15l1.9 1.1M4.9 16.1l1.9-1.1M17.2 9l1.9-1.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>설정</span>
+    </button>
+  </nav>
+</div>
+
+<dialog id="entryDialog" class="sheet">
+  <button class="sheet-close" data-act="close-sheet" aria-label="닫기">✕</button>
+  <div id="entryBody"></div>
+</dialog>
+
+<dialog id="itemDialog" class="sheet">
+  <button class="sheet-close" data-act="close-sheet" aria-label="닫기">✕</button>
+  <div id="itemBody"></div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="core.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>
