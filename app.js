@@ -4,7 +4,7 @@
 
   var C = window.SpendCore;
   var STORE_KEY = 'spend-note:v2';
-  var VERSION_LABEL = 'v1';
+  var VERSION_LABEL = 'v2';
 
   /* ---------- helpers ---------- */
 
@@ -343,8 +343,7 @@
   function entryRow(entry, opts) {
     var isIncome = entry.type === 'income';
     var memoBits = [];
-    if (isIncome) memoBits.push('수입');
-    else memoBits.push(esc(C.methodName(state, entry)));
+    memoBits.push(esc(C.methodName(state, entry)));
     if (entry.memo) memoBits.push(esc(entry.memo));
     if (entry.excludePerf) memoBits.push('실적 제외');
     var meta = memoBits.join(' · ');

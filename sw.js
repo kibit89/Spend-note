@@ -1,11 +1,11 @@
 /* Spend Note — offline shell */
-var CACHE = 'spend-note-v1';
+var CACHE = 'spend-note-v2';
 var ASSETS = [
   './',
   'index.html',
-  'styles.css?v=1',
-  'core.js?v=1',
-  'app.js?v=1',
+  'styles.css?v=2',
+  'core.js?v=2',
+  'app.js?v=2',
   'manifest.json',
   'icon.svg',
   'icon-192.png',
