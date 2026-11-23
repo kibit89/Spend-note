@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Spend Note">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <div class="app">
@@ -43,9 +43,15 @@
       <div class="card hero" id="hero"></div>
 
       <div class="card entry-card">
-        <div class="type-toggle" role="group" aria-label="지출 또는 수입">
-          <button class="type-btn is-on" data-act="pick-type" data-type="expense">지출</button>
-          <button class="type-btn" data-act="pick-type" data-type="income">수입</button>
+        <div class="entry-top">
+          <div class="type-toggle three" role="group" aria-label="지출, 수입, 이체">
+            <button class="type-btn is-on" data-act="pick-type" data-type="expense">지출</button>
+            <button class="type-btn" data-act="pick-type" data-type="income">수입</button>
+            <button class="type-btn" data-act="pick-type" data-type="transfer">이체</button>
+          </div>
+          <button class="paste-btn" data-act="open-parser" title="은행·카드·페이 알림 문구를 붙여넣으면 자동으로 채워요">
+            <span aria-hidden="true">📋</span><span>붙여넣기</span>
+          </button>
         </div>
 
         <div class="amount-row">
@@ -59,7 +65,16 @@
         <div class="cat-grid" id="catGrid"></div>
 
         <div id="methodWrap">
+          <div class="field-label" id="methodLabel">결제 수단</div>
           <div class="method-scroll" id="methodChips"></div>
+        </div>
+
+        <div id="transferWrap" hidden>
+          <div class="field-label">출금 계좌</div>
+          <div class="method-scroll" id="fromChips"></div>
+          <div class="field-label">입금 계좌</div>
+          <div class="method-scroll" id="toChips"></div>
+          <p class="hint" id="transferHint"></p>
         </div>
 
         <input id="memoInput" class="memo-input" type="text" placeholder="메모 (선택)" maxlength="60"
@@ -108,6 +123,8 @@
 
     <!-- 요약 -->
     <section id="view-summary" class="view">
+      <div class="card assets" id="sumAssets"></div>
+
       <div class="month-nav">
         <button class="icon-btn" data-act="sum-prev" aria-label="이전 달">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -129,17 +146,40 @@
     <!-- 설정 -->
     <section id="view-settings" class="view">
       <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">내 계좌 · 적금</h2>
+          <span class="card-total" id="accTotal"></span>
+        </div>
+        <p class="hint">입출금·페이 계좌와 적금을 나눠서 잔액을 관리해요. 여기 잔액으로 총자산과 ‘지금 쓸 수 있는 여윳돈’을 계산해요.</p>
+        <div id="accountList"></div>
+        <div class="add-row">
+          <button class="btn" data-act="add-account" data-kind="checking">+ 입출금</button>
+          <button class="btn" data-act="add-account" data-kind="pay">+ 페이</button>
+          <button class="btn" data-act="add-account" data-kind="savings">+ 적금</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">비상금 목표</h2>
+          <span class="card-total" id="goalNow"></span>
+        </div>
+        <p class="hint">목표를 정하면 요약 화면에 달성률 게이지가 나와요. 계좌·적금마다 ‘비상금에 포함’을 체크한 잔액만 쌓여요.</p>
+        <button class="btn wide" data-act="edit-goal">비상금 목표 바꾸기</button>
+      </div>
+
+      <div class="card">
         <h2 class="card-title">고정비</h2>
         <p class="hint">매달 나가는 금액을 적어 두면 ‘고정비 빼고 여유 돈’과 ‘주간 필요 수입’을 계산해요.</p>
         <div id="fixedList"></div>
         <div class="sum-line" id="fixedTotal"></div>
         <button class="btn wide" data-act="add-fixed">+ 고정비 항목 추가</button>
-        <p class="fine">같은 금액을 지출 내역에도 적으면 여유 돈에서 두 번 빠져요. 고정비는 여기서만 관리하세요.</p>
+        <p class="fine">같은 금액을 지출 내역에도 적으면 여유 돈에서 두 번 빠져요. 고정비는 여기서만 관리하세요. (고정비 분류로 지출을 기록하면 ‘남은 고정비’에서 빠집니다.)</p>
       </div>
 
       <div class="card">
         <h2 class="card-title">카드</h2>
-        <p class="hint">카드별 목표 실적을 정하면 이번 달 진행률과 필요한 수입을 계산해요. 풍차돌리기 카드도 여기서 추가하세요.</p>
+        <p class="hint">카드별 목표 실적을 정하면 이번 달 진행률과 필요한 수입을 계산해요. 신용카드는 잔액이 줄지 않고 실적만 올라가고, 체크카드는 연결한 계좌에서 바로 빠져요.</p>
         <div id="cardList"></div>
         <div class="sum-line" id="cardTotal"></div>
         <button class="btn wide" data-act="add-card">+ 카드 추가</button>
@@ -211,9 +251,14 @@
   <div id="itemBody"></div>
 </dialog>
 
+<dialog id="parseDialog" class="sheet">
+  <button class="sheet-close" data-act="close-sheet" aria-label="닫기">✕</button>
+  <div id="parseBody"></div>
+</dialog>
+
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="core.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="core.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

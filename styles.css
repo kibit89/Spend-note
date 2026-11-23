@@ -700,3 +700,95 @@ dialog.sheet[open] { animation: sheet-up .2s ease; }
   .cat-grid { gap: 5px; }
   .cat-btn { min-height: 58px; }
 }
+
+/* ---------- v4: types, assets, accounts, parser ---------- */
+.type-toggle.three { grid-template-columns: repeat(3, 1fr); }
+.type-btn.is-on[data-type="transfer"] { color: var(--brand); }
+
+.entry-top { display: flex; align-items: flex-start; gap: 8px; }
+.entry-top .type-toggle { flex: 1; margin-bottom: 12px; }
+.paste-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px dashed var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 11px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  font-weight: 650;
+  cursor: pointer;
+  margin-bottom: 12px;
+  white-space: nowrap;
+}
+.paste-btn:active { background: var(--brand-bg); border-color: var(--brand); color: var(--brand-2); }
+
+.field-label { font-size: 11.5px; font-weight: 650; color: var(--ink-3); margin: 12px 0 0; }
+#methodWrap .field-label, #transferWrap .field-label { margin-top: 10px; }
+
+.add-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.add-row .btn { width: 100%; margin-top: 0; font-size: 12.5px; padding: 9px 6px; }
+
+.badge {
+  display: inline-block;
+  background: var(--brand-bg);
+  color: var(--brand-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 7px;
+  vertical-align: 1px;
+}
+.badge.soft { background: var(--surface-2); color: var(--ink-2); font-weight: 600; }
+
+.asset-total { font-size: 28px; font-weight: 760; letter-spacing: -.8px; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.asset-total .unit { font-size: 16px; font-weight: 650; color: var(--ink-2); margin-left: 2px; letter-spacing: 0; }
+.asset-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.asset-split > div { background: var(--ink-soft); border-radius: 12px; padding: 8px 11px; }
+.asset-split .k { display: block; font-size: 11px; color: var(--ink-3); }
+.asset-split b { font-size: 14.5px; font-variant-numeric: tabular-nums; }
+
+.gauge-box { margin-top: 13px; padding: 11px 12px; border-radius: 13px; background: var(--ink-soft); }
+.gauge-box .hint { margin-top: 6px; }
+.gauge-box .btn.tiny { margin-top: 8px; }
+
+.spendable { margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--brand-bg); }
+.spendable .k { font-size: 12px; font-weight: 700; color: var(--brand-2); }
+.spendable .v { font-size: 24px; font-weight: 760; font-variant-numeric: tabular-nums; letter-spacing: -.5px; margin-top: 2px; }
+.spendable .v.bad { color: var(--red); }
+.spendable .v span { font-size: 14px; font-weight: 650; color: var(--ink-2); margin-left: 2px; }
+.spendable .s { font-size: 11px; color: var(--ink-2); margin-top: 5px; line-height: 1.45; font-variant-numeric: tabular-nums; }
+.spendable .s.bad { color: var(--red); font-weight: 600; }
+
+.acc-list { margin-top: 12px; border-top: 1px solid var(--line); }
+.acc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.acc-row:last-child { border-bottom: 0; }
+.acc-name { font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-amt { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; }
+.acc-amt.bad { color: var(--red); }
+
+.cal-cell .transfer-dot {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.entry-amt.transfer { color: var(--ink-2); }
+
+.day-actions.three { grid-template-columns: repeat(3, 1fr); }
+.day-actions.three .btn { font-size: 12.5px; padding: 9px 4px; }
+
+select.sheet-input { appearance: none; background-image: none; }
+.parse-text { min-height: 96px; resize: vertical; line-height: 1.5; font-size: 13px; }
+.parse-head { font-size: 12px; font-weight: 700; color: var(--ink-2); margin-top: 14px; }
+.parse-list { margin-top: 6px; }
+.parse-row { display: grid; grid-template-columns: 18px 1fr; gap: 6px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.parse-row.bad { color: var(--red); }
+.parse-mark { font-weight: 700; }
+.parse-desc { line-height: 1.4; }
+.parse-raw { grid-column: 2; font-size: 11px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
