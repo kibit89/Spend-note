@@ -75,6 +75,7 @@
     amount: 0,
     catId: null,
     methodId: null,
+    methodTouched: false,
     fromId: '',
     toId: '',
     exclude: false,
@@ -151,7 +152,9 @@
       if (ui.catId && ids.indexOf(ui.catId) === -1) ui.catId = null;
     }
     var opts = methodOptions(ui.type);
-    if (!opts.some(function (o) { return o.id === ui.methodId; })) ui.methodId = defaultMethodId(ui.type);
+    if (!ui.methodTouched || !opts.some(function (o) { return o.id === ui.methodId; })) {
+      ui.methodId = defaultMethodId(ui.type);
+    }
     if (ui.methodId.indexOf('card:') !== 0) ui.exclude = false;
   }
 
@@ -1356,6 +1359,7 @@
       ui.catId = r.categoryId || (r.type === 'income' ? state.lastIncomeCategoryId : ui.catId);
       ui.methodId = r.methodType === 'card' ? 'card:' + r.cardId
         : (r.methodType === 'account' ? 'account:' + r.accountId : 'cash');
+      ui.methodTouched = true;
     }
     renderForm();
     if (r.canceled) toast('취소된 거래로 보여요. 확인하고 저장하세요');
@@ -1428,6 +1432,7 @@
       var payload = readPayload(setup[1]);
       if (!payload) { toast('설정 링크를 읽지 못했어요'); return false; }
       var result = C.applySetup(state, payload);
+      ui.methodTouched = false;
       persist();
       refresh();
       renderForm();
@@ -1516,6 +1521,7 @@
   on('pick-type', function (el) {
     var type = el.getAttribute('data-type');
     ui.type = type === 'income' ? 'income' : (type === 'transfer' ? 'transfer' : 'expense');
+    ui.methodTouched = false;
     if (ui.type === 'income') ui.catId = state.lastIncomeCategoryId || (state.incomeCategories[0] && state.incomeCategories[0].id);
     else if (ui.type === 'expense') ui.catId = state.lastCategoryId;
     ui.exclude = false;
@@ -1539,6 +1545,7 @@
   });
   on('pick-method', function (el) {
     ui.methodId = el.getAttribute('data-method');
+    ui.methodTouched = true;
     renderMethodChips();
     var isCard = ui.methodId.indexOf('card:') === 0;
     $('#excludeRow').hidden = !isCard;
