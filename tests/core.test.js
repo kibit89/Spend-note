@@ -476,6 +476,21 @@
     eq(used.categories.length, 9, 'setup merges when entries exist');
     eq(used.entries.length, 6, 'setup does not touch entries');
 
+    // an older combined category is renamed, not duplicated, when records exist
+    var oldCats = C.defaultState();
+    oldCats.categories = [
+      { id: 'c_cafe', name: '카페·간식', emoji: '☕' },
+      { id: 'c_shop', name: '알리·테무·핀둬둬', emoji: '📦' },
+      { id: 'life', name: '생활·마트', emoji: '🧺' },
+      { id: 'etc', name: '기타', emoji: '📌' }
+    ];
+    oldCats.entries = [{ id: 'e1', type: 'expense', date: '2026-11-20', amount: 3000, categoryId: 'c_cafe', methodType: 'cash' }];
+    C.applySetup(oldCats, { c: [['카페', '☕'], ['간식', '🍪'], ['알리', '📦'], ['테무', '📦'], ['생활', '🧺']] });
+    eq(oldCats.categories.filter(function (c) { return c.name === '카페'; }).length, 1, 'setup renames the combined cafe category');
+    eq(oldCats.categories.filter(function (c) { return c.name === '간식'; }).length, 1, 'setup adds the split snack category');
+    eq(oldCats.categories.filter(function (c) { return c.name === '생활'; }).length, 1, 'setup renames the combined life category');
+    eq(oldCats.entries[0].categoryId, 'c_cafe', 'setup keeps records on the renamed category');
+
     // compact form, as used by a shareable #setup= link
     var compact = {
       c: [['반찬', '🥘'], ['다이소', '🧴'], ['고정비', '📅'], ['기타', '📌']],

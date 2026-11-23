@@ -1285,6 +1285,15 @@
         for (var i = 0; i < list.length; i++) {
           if (list[i].name === c.name || list[i].id === wantedId) { existing = list[i]; break; }
         }
+        if (!existing) {
+          /* An older combined name ('카페·간식' for '카페') is the same shelf: rename it
+             instead of leaving two near-identical categories with records split across them. */
+          var loose = list.filter(function (x) {
+            if (x.id === etcId) return false;
+            return x.name.indexOf(c.name) >= 0 || c.name.indexOf(x.name) >= 0;
+          });
+          if (loose.length === 1) existing = loose[0];
+        }
         if (existing) { existing.name = c.name; existing.emoji = c.emoji; }
         else list.push({ id: wantedId, name: c.name, emoji: c.emoji });
       });
